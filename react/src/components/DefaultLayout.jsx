@@ -1,10 +1,10 @@
-import { Fragment } from 'react'
+import { Fragment , useEffect} from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import {Bars3Icon, UserCircleIcon, UserIcon, XMarkIcon} from '@heroicons/react/24/outline'
 import {Navigate, NavLink, Outlet} from "react-router-dom";
 import { useStateContext} from "../Contexts/ContextProvider.jsx";
 import axiosClient from "../axios.js";
-
+import Toast from "./Toast";
 // const user = {
 //     name: 'Tom Cook',
 //     email: 'tom@example.com',
@@ -27,14 +27,25 @@ export default function DefaultLayout() {
     if(!userToken){
         return <Navigate to='login'/>
     }
-    function logout(ev){
+    const logout = (ev) => {
         ev.preventDefault();
-        axiosClient.post('logout')
-            .then((rss)=>{
-                setUserToken(null);
+        axiosClient.post("/logout").then((res) => {
+            setCurrentUser({});
+            setUserToken(null);
+        });
+    };
+
+
+    useEffect(() => {
+        axiosClient.get('/me')
+            .then(({ data }) => {
+            if(!data){
                 setCurrentUser({});
+                setUserToken(null);
+            }
+                setCurrentUser(data)
             })
-    }
+    }, [])
     return (
         <>
             <div className="min-h-full">
@@ -166,6 +177,8 @@ export default function DefaultLayout() {
                 </Disclosure>
 
               <Outlet/>
+
+                <Toast />
             </div>
         </>
     )
